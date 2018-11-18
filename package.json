@@ -1,0 +1,17 @@
+{
+  "name": "darcy-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "rollup": "^0.67.3",
+    "rollup-plugin-svelte": "^4.3.2",
+    "rollup-plugin-terser": "^3.0.0",
+    "svelte": "^2.15.3"
+  }
+}

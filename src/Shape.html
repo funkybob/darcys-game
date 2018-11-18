@@ -1,0 +1,24 @@
+<polygon points="{points}" />
+
+<script>
+	export default {
+		namespace: 'svg',
+		data () {
+			return {}
+		},
+		computed: {
+			points: ({n}) => {
+				let points = []
+				let radius = 10
+				const arc = 360 / n;
+				for(let v=0; v < n; v++) {
+					let a = v * arc;
+					let x = radius + radius * Math.cos(a * Math.PI / 180)
+					let y = radius + radius * Math.sin(a * Math.PI / 180)
+					points.push(`${x},${y}`);
+				}
+				return points.join(', ')
+			}
+		}
+	}
+</script>

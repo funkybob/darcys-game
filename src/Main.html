@@ -1,0 +1,44 @@
+<h1> Darcy's Matching Game! {frame} </h1>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="50" fill="#ffffff" stroke="black" />
+	<Shape n=5 radius=100 />
+</svg>
+
+<script>
+	import Shape from './Shape.html'
+
+	export default {
+		components: {
+			Shape,
+		},
+		data () {
+			return {
+				now: 0,
+				start: 0,
+				frame: 0
+			}
+		},
+		computed: {
+			frame: ({start, now}) => ((now - start) / 60).toFixed(0)
+		},
+		oncreate () {
+			this.set({start: performance.now()})
+			this.onTimer();
+		},
+		methods: {
+			onTimer(now) {
+				this.set({now})
+		    window.requestAnimationFrame(this.onTimer.bind(this))
+			}
+		}
+	}
+</script>
+
+<style>
+	svg {
+		width: 50vh;
+		height: 50vh;
+		margin: 0 auto;
+		display: block;
+	}
+</style>
