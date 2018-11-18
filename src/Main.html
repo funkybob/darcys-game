@@ -1,11 +1,36 @@
-<h1> Darcy's Matching Game! {frame} </h1>
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="100" cy="100" r="50" fill="#ffffff" stroke="black" />
-	<Shape n=5 radius=100 />
+<h1> Score: {score} ({frame})</h1>
+<svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
+  on:mousemove="trackMouse(event)"
+  on:mouseup="mouseup(null)"
+>
+  <circle cx="100" cy="100" r="80" fill="green" stroke="black" />
+  {#each starts as shape (shape.id)}
+    <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
+        on:mousedown="mousedown(shape)"
+    />
+  {/each}
+  {#each shapes as shape (shape.id)}
+    <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
+        on:mouseup="mouseup(shape)"
+    />
+  {/each}
+  {#if down}
+  <line stroke="red" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
+  {/if}
 </svg>
 
 <script>
 	import Shape from './Shape.html'
+
+	const colours = [
+		'red',
+		'orange',
+		'yellow',
+		'green',
+		'blue',
+		'purple',
+		'coral',
+	]
 
 	export default {
 		components: {
@@ -13,9 +38,22 @@
 		},
 		data () {
 			return {
+				running: false,
+				// ID sequence for shapes
+				counter: 0,
+				score: 0,
+				starts: [],
+				shapes: [],
 				now: 0,
-				start: 0,
-				frame: 0
+				// Time the game started
+				start: undefined,
+				frame: 0,
+				level: 0,
+				// How often to add a new shape
+				interval: 100,
+				// Where the mouse-down started
+				down: undefined,
+				pointer: undefined
 			}
 		},
 		computed: {
@@ -23,12 +61,99 @@
 		},
 		oncreate () {
 			this.set({start: performance.now()})
+			this.pt = this.refs.canvas.createSVGPoint()
+			this.nextLevel();
+			this.on('update', ({ changed, current, previous }) => {
+				if (changed.frame) {
+					if( current.frame % current.interval == 0)
+						this.addShape()
+				}
+			})
+			this.set({running: true})
 			this.onTimer();
 		},
 		methods: {
-			onTimer(now) {
+			onTimer (now) {
 				this.set({now})
-		    window.requestAnimationFrame(this.onTimer.bind(this))
+				this.travelShapes();
+				if (this.get().running)
+					window.requestAnimationFrame(this.onTimer.bind(this))
+			},
+			nextLevel () {
+				let {starts, level, counter} = this.get()
+				let shape = {
+					id: counter,
+					fill: colours[(4 + level) % colours.length],
+					x: 0,
+					y: 0,
+					n: 3 + level,
+				}
+				starts.push(shape)
+				level += 1
+				counter += 1;
+				// Re-distribute around the circle
+				const arc = 360 / starts.length;
+				for(let i=0, l=starts.length; i < l; i++) {
+					let a = arc * i + 90;
+					starts[i].x = 90 + 90 * Math.cos(a * Math.PI / 180)
+					starts[i].y = 90 + 90 * Math.sin(a * Math.PI / 180)
+				}
+				this.set({starts, level, counter})
+			},
+			addShape () {
+				let {level, frame, shapes, counter} = this.get()
+				let shape = {
+					id: counter,
+					frame: frame,
+					fill: colours[(3 + level) % colours.length],
+					x: 90,
+					y: 90,
+					n: 3 + Math.floor(Math.random() * level),
+					v: Math.floor(Math.random() * 360)
+				}
+				shapes.push(shape)
+				counter += 1;
+				this.set({shapes, counter})
+			},
+			travelShapes () {
+				// Move each shape along according to its vector 'v'
+				let {frame, shapes} = this.get()
+				shapes.forEach(shape => {
+					let age = frame - shape.frame
+					if (age == 80) this.endGame()
+					shape.x = 100 + age * Math.cos(shape.v * Math.PI / 180)
+					shape.y = 100 + age * Math.sin(shape.v * Math.PI / 180)
+				})
+				this.set({shapes})
+			},
+			endGame () {
+				this.set({running: false})
+				alert("GAME OVER!")
+			},
+			trackMouse (ev) {
+				this.pt.x = ev.clientX;
+				this.pt.y = ev.clientY;
+				let p = this.pt.matrixTransform(this.refs.canvas.getScreenCTM().inverse())
+				let pointer = {x: p.x, y: p.y}
+				this.set({pointer})
+			},
+			mousedown (shape) {
+				this.set({down: shape})
+			},
+			mouseup (shape) {
+				let {level, score, down, shapes} = this.get()
+				this.set({down: undefined})
+				if (shape === null) {
+					return;
+				}
+				if (down.n == shape.n) {
+					score += shape.n
+					shapes = shapes.filter(s => s.id !== shape.id)
+					if (score > Math.pow(5, level + 1)) {
+						this.nextLevel()
+					}
+					this.set({score, shapes})
+				}
 			}
 		}
 	}

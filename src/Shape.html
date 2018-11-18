@@ -1,11 +1,13 @@
-<polygon points="{points}" />
+<svg x={x} y={y}>
+  <polygon points={points} fill={fill} pointer-events="visiblePainted"
+    on:mousedown="fire('mousedown', event)"
+	on:mouseup="fire('mouseup', event)"
+  />
+</svg>
 
 <script>
 	export default {
 		namespace: 'svg',
-		data () {
-			return {}
-		},
 		computed: {
 			points: ({n}) => {
 				let points = []
