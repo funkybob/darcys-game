@@ -1,4 +1,7 @@
 <h1> Score: {score} ({frame})</h1>
+<h2> Level: {level} </h2>
+<button on:click="startGame()" disabled={running}>Start Game</button>
+<p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
 <svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
   on:mousemove="trackMouse(event)"
   on:mouseup="mouseup(null)"
@@ -47,32 +50,40 @@
         now: 0,
         // Time the game started
         start: undefined,
-        frame: 0,
         level: 0,
-        // How often to add a new shape
-        interval: 100,
         // Where the mouse-down started
         down: undefined,
         pointer: undefined
       }
     },
     computed: {
-      frame: ({start, now}) => ((now - start) / 60).toFixed(0)
+      frame: ({start, now}) => Math.floor((now - start) / 60),
+      level: ({score}) => (score == 0) ? 0 : Math.floor(Math.log(score) / Math.log(4)),
+      interval: ({level}) => 90 - (level * level) // Effectively caps us to level 9...
     },
     oncreate () {
       this.set({start: performance.now()})
       this.pt = this.refs.canvas.createSVGPoint()
-      this.nextLevel();
       this.on('update', ({ changed, current, previous }) => {
-        if (changed.frame) {
-          if( current.frame % current.interval == 0)
-            this.addShape()
+        if (!previous) {
+          // first update
+        } else {
+          if (current.frame > previous.frame) {
+            if(current.frame % current.interval == 0)
+              this.addShape()
+          }
+          if (current.level > previous.level) {
+            this.nextLevel()
+          }
         }
       })
-      this.set({running: true})
-      this.onTimer();
     },
     methods: {
+      startGame () {
+        this.nextLevel();
+        this.set({running: true, score: 0})
+        this.onTimer()
+      },
       onTimer (now) {
         this.set({now})
         this.travelShapes();
@@ -83,33 +94,36 @@
         let {starts, level, counter} = this.get()
         let shape = {
           id: counter,
-          fill: colours[(3 + level) % colours.length],
+          fill: colours[level % colours.length],
           x: 0,
           y: 0,
           n: 3 + level,
         }
         starts.push(shape)
-        level += 1
         counter += 1;
         // Re-distribute around the circle
         const arc = 360 / starts.length;
         for(let i=0, l=starts.length; i < l; i++) {
           let a = arc * i + 90;
+          // centre of circle is 100,100
+          // shape is 20x20, so offset -10,-10
+          // circle has radius of 80, so place these a bit wider
           starts[i].x = 90 + 90 * Math.cos(a * Math.PI / 180)
           starts[i].y = 90 + 90 * Math.sin(a * Math.PI / 180)
         }
-        this.set({starts, level, counter})
+        this.set({starts, counter})
       },
       addShape () {
-		let {level, frame, shapes, counter} = this.get()
-		let n = 3 + Math.floor(Math.random() * level)
+        let {level, frame, shapes, counter} = this.get()
+        // level is 0-based
+        let n = Math.round(Math.random() * level)
         let shape = {
           id: counter,
           frame: frame,
           fill: colours[n % colours.length],
           x: 90,
           y: 90,
-          n: n,
+          n: 3 + n,
           v: Math.floor(Math.random() * 360)
         }
         shapes.push(shape)
@@ -122,8 +136,10 @@
         shapes.forEach(shape => {
           let age = frame - shape.frame
           if (age == 80) this.endGame()
-          shape.x = 100 + age * Math.cos(shape.v * Math.PI / 180)
-          shape.y = 100 + age * Math.sin(shape.v * Math.PI / 180)
+          // centre of circle is 100,100
+          // shape is 20x20, so offset -10,-10
+          shape.x = 90 + age * Math.cos(shape.v * Math.PI / 180)
+          shape.y = 90 + age * Math.sin(shape.v * Math.PI / 180)
         })
         this.set({shapes})
       },
@@ -142,7 +158,7 @@
         this.set({down: shape})
       },
       mouseup (shape) {
-        let {level, score, down, shapes} = this.get()
+        let {score, down, shapes} = this.get()
         this.set({down: undefined})
         if (shape === null) {
           return;
@@ -150,9 +166,6 @@
         if (down.n == shape.n) {
           score += shape.n
           shapes = shapes.filter(s => s.id !== shape.id)
-          if (score > Math.pow(5, level + 1)) {
-            this.nextLevel()
-          }
           this.set({score, shapes})
         }
       }
@@ -162,8 +175,8 @@
 
 <style>
   svg {
-    width: 50vh;
-    height: 50vh;
+    width: 80vh;
+    height: 80vh;
     margin: 0 auto;
     display: block;
   }
