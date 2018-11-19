@@ -82,8 +82,14 @@
     },
     methods: {
       startGame () {
+        this.set({
+          running: true,
+          score: 0,
+          lastSpawn: 0,
+          shapes: [],
+          starts: []
+        })
         this.nextLevel();
-        this.set({running: true, score: 0, lastSpawn: 0})
         this.onTimer()
       },
       onTimer (now) {
