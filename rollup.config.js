@@ -19,12 +19,11 @@ export default {
 		production && terser({
 			module: true,
 			nameCache: {},
+			ecma: 8,
 			compress: {
-				ecma: 6,
 				passes: 2,
 			},
 			output: {
-				ecma: 5,
 				beautify: false
 			}
 		}),
