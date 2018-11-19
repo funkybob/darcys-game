@@ -32,3 +32,7 @@ This requires a web server. I generally use the one built into Python3:
 
 Then point your browser at http://127.0.0.1:8000/index.html
 
+
+# Thanks
+- Rich Harris (for Svelte, Rollup, and "pointer-events: none;"
+
