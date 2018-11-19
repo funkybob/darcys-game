@@ -1,6 +1,8 @@
-<h1> Score: {score} </h1>
-<h2> Level: {level} </h2>
-<button on:click="startGame()" disabled={running}>Start Game</button>
+<main>
+  <h1> Score: {score} </h1>
+  <button on:click="startGame()" disabled={running}>Start Game</button>
+  <h2> Level: {level} </h2>
+</main>
 <p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
 <svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
   on:mousemove="trackMouse(event)"
@@ -182,6 +184,9 @@
 </script>
 
 <style>
+  main { display: flex; flex-wrap: wrap; }
+  h1, h2 { flex: 2 2 auto; text-align: center; }
+  button { flex: 1 1 auto; }
   svg {
     width: 80vh;
     height: 80vh;
