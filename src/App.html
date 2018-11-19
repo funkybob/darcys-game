@@ -62,10 +62,9 @@
     computed: {
       frame: ({start, now}) => Math.floor((now - start) / 60),
       level: ({score}) => (score == 0) ? 0 : Math.floor(Math.sqrt(score) / 30 + score / 30),
-      interval: ({level}) => 90 - (level * level) // Effectively caps us to level 9...
+      interval: ({level}) => Math.floor(85 - level * Math.log(level+1)) // Caps us about level 50
     },
     oncreate () {
-      this.set({start: performance.now()})
       this.pt = this.refs.canvas.createSVGPoint()
       this.on('update', ({ changed, current, previous }) => {
         if (!previous) {
@@ -86,6 +85,7 @@
       startGame () {
         this.set({
           running: true,
+          start: performance.now(),
           score: 0,
           lastSpawn: 0,
           shapes: [],
