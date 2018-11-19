@@ -1,4 +1,4 @@
-<h1> Score: {score} ({frame})</h1>
+<h1> Score: {score} </h1>
 <h2> Level: {level} </h2>
 <button on:click="startGame()" disabled={running}>Start Game</button>
 <p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
@@ -50,6 +50,7 @@
         now: 0,
         // Time the game started
         start: undefined,
+        lastSpawn: 0,
         level: 0,
         // Where the mouse-down started
         down: undefined,
@@ -58,7 +59,7 @@
     },
     computed: {
       frame: ({start, now}) => Math.floor((now - start) / 60),
-      level: ({score}) => (score == 0) ? 0 : Math.floor(Math.log(score) / Math.log(4)),
+      level: ({score}) => (score == 0) ? 0 : Math.floor(Math.sqrt(score) / 30 + score / 30),
       interval: ({level}) => 90 - (level * level) // Effectively caps us to level 9...
     },
     oncreate () {
@@ -69,8 +70,9 @@
           // first update
         } else {
           if (current.frame > previous.frame) {
-            if(current.frame % current.interval == 0)
+            if(current.frame - current.lastSpawn > current.interval) {
               this.addShape()
+            }
           }
           if (current.level > previous.level) {
             this.nextLevel()
@@ -81,7 +83,7 @@
     methods: {
       startGame () {
         this.nextLevel();
-        this.set({running: true, score: 0})
+        this.set({running: true, score: 0, lastSpawn: 0})
         this.onTimer()
       },
       onTimer (now) {
@@ -128,7 +130,7 @@
         }
         shapes.push(shape)
         counter += 1;
-        this.set({shapes, counter})
+        this.set({shapes, counter, lastSpawn: frame})
       },
       travelShapes () {
         // Move each shape along according to its vector 'v'
