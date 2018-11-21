@@ -20,7 +20,7 @@
     />
   {/each}
   {#if down}
-  <line stroke="red" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
+  <line stroke="{down.fill || red}" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
   {/if}
 </svg>
 
@@ -34,7 +34,7 @@
     'lightgreen',
     'blue',
     'purple',
-    'coral',
+    'grey',
   ]
 
   export default {
