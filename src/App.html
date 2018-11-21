@@ -61,7 +61,13 @@
     },
     computed: {
       frame: ({start, now}) => Math.floor((now - start) / 60),
-      level: ({score}) => (score == 0) ? 0 : Math.floor(Math.sqrt(score) / 30 + score / 30),
+      level: ({score}) => {
+        let step = 20;
+        let level = 0;
+        score -= step;
+        while(score > 0) { level += 1; score -= step; step *= 1.2; }
+        return level
+      },
       interval: ({level}) => Math.floor(85 - level * Math.log(level+1)) // Caps us about level 50
     },
     oncreate () {
