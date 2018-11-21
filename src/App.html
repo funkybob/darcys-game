@@ -1,7 +1,7 @@
 <main>
   <h1> Score: {score} </h1>
   <button on:click="startGame()" disabled={running}>Start Game</button>
-  <h2> Level: {level} </h2>
+  <h2> Level: {level+1} </h2>
 </main>
 <p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
 <svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
