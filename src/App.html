@@ -8,6 +8,7 @@
   on:mousemove="trackMouse(event)"
   on:mouseup="mouseup(null)"
 >
+  <circle cx="100" cy="100" r="100" fill="lightgreen" />
   <circle cx="100" cy="100" r="80" fill="green" stroke="black" />
   {#each starts as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
@@ -35,6 +36,9 @@
     'blue',
     'purple',
     'grey',
+    'blueviolet',
+    'chocolate',
+    'crimson',
   ]
 
   export default {
