@@ -1,26 +1,34 @@
 <svg x={x} y={y}>
-  <polygon points={points} fill={fill} pointer-events="visiblePainted"
+  <polygon points={points} fill={fill}
+    pointer-events="visiblePainted"
     on:mousedown="fire('mousedown', event)"
-	on:mouseup="fire('mouseup', event)"
+    on:mouseup="fire('mouseup', event)"
   />
 </svg>
 
 <script>
-	export default {
-		namespace: 'svg',
-		computed: {
-			points: ({n}) => {
-				let points = []
-				let radius = 10
-				const arc = 360 / n;
-				for(let v=0; v < n; v++) {
-					let a = v * arc;
-					let x = radius + radius * Math.cos(a * Math.PI / 180)
-					let y = radius + radius * Math.sin(a * Math.PI / 180)
-					points.push(`${x},${y}`);
-				}
-				return points.join(', ')
-			}
-		}
-	}
+  export default {
+    namespace: 'svg',
+    computed: {
+      points: ({n}) => {
+        let points = []
+        let radius = 10
+        const arc = 360 / n;
+        for(let v=0; v < n; v++) {
+          let a = v * arc;
+          let x = radius + radius * Math.cos(a * Math.PI / 180)
+          let y = radius + radius * Math.sin(a * Math.PI / 180)
+          points.push(`${x},${y}`);
+        }
+        return points.join(', ')
+      }
+    }
+  }
 </script>
+
+<style>
+  polygon {
+    stroke: black;
+    stroke-width: 1;
+  }
+</style>
