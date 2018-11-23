@@ -14,7 +14,7 @@ export default {
 		svelte({
 			// enable run-time checks when not in production
 			dev: !production,
-			css: (css) => css.write('dist/bundle.css')
+			css: (css) => css.write('dist/bundle.css', false)
 		}),
 		production && terser({
 			module: true,
