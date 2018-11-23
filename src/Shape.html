@@ -2,7 +2,9 @@
   <polygon points={points} fill={fill}
     pointer-events="visiblePainted"
     on:mousedown="fire('mousedown', event)"
+    on:touchstart="fire('mousedown', event)"
     on:mouseup="fire('mouseup', event)"
+    on:touchend="fire('mouseup', event)"
   />
 </svg>
 

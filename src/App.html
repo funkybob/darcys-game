@@ -6,22 +6,24 @@
 <p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
 <svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
   on:mousemove="trackMouse(event)"
+  on:touchmove="trackMouse(event)"
   on:mouseup="mouseup(null)"
+  on:touchend="touchend(event)"
 >
   <circle cx="100" cy="100" r="100" fill="lightgreen" />
   <circle cx="100" cy="100" r="80" fill="green" stroke="black" />
   {#each starts as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
-        on:mousedown="mousedown(shape)"
+      on:mousedown="mousedown(shape)"
     />
   {/each}
   {#each shapes as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
-        on:mouseup="mouseup(shape)"
+      on:mouseup="mouseup(shape)"
     />
   {/each}
   {#if down}
-  <line stroke="{down.fill || red}" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
+  <line stroke="{down.fill || 'red'}" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
   {/if}
 </svg>
 
@@ -59,8 +61,8 @@
         lastSpawn: 0,
         level: 0,
         // Where the mouse-down started
-        down: undefined,
-        pointer: undefined
+        down: null,
+        pointer: {}
       }
     },
     computed: {
@@ -167,22 +169,43 @@
         this.set({running: false})
         alert("GAME OVER!")
       },
-      trackMouse (ev) {
-        this.pt.x = ev.clientX;
-        this.pt.y = ev.clientY;
+      screenToSvg(x, y) {
+        this.pt.x = x;
+        this.pt.y = y;
         let p = this.pt.matrixTransform(this.refs.canvas.getScreenCTM().inverse())
-        let pointer = {x: p.x, y: p.y}
+        return {x: p.x, y: p.y}
+      },
+      trackMouse (ev) {
+        ev.preventDefault();  // prevents touchmove from dragging the window
+        let pointer = this.screenToSvg(
+          (ev.type === 'touchmove') ? ev.changedTouches[0].clientX : ev.clientX,
+          (ev.type === 'touchmove') ? ev.changedTouches[0].clientY : ev.clientY
+        )
         this.set({pointer})
       },
       mousedown (shape) {
         this.set({down: shape})
       },
+      touchend (ev) {
+        // scan the shapes to see if we can find one
+        let pointer = this.screenToSvg(
+          ev.changedTouches[0].clientX,
+          ev.changedTouches[0].clientY
+        )
+        let {shapes} = this.get()
+        let match = shapes.find(s => {
+          // shapes center is 10,10 from their origin
+          let dist = Math.sqrt(Math.pow(s.x + 10 - pointer.x, 2) + Math.pow(s.y + 10 - pointer.y, 2))
+          // Shape radius is 10
+          return (dist < 10) ? true : false;
+        })
+        if (match) this.mouseup(match)
+        else this.mouseup(null)
+      },
       mouseup (shape) {
         let {score, down, shapes} = this.get()
-        this.set({down: undefined})
-        if (shape === null) {
-          return;
-        }
+        this.set({down: null})
+        if (shape === null) return;
         if (down.n == shape.n) {
           score += shape.n
           shapes = shapes.filter(s => s.id !== shape.id)
@@ -194,12 +217,14 @@
 </script>
 
 <style>
-  main { display: flex; flex-wrap: wrap; }
+  main { display: flex; }
   h1, h2 { flex: 2 2 auto; text-align: center; }
   button { flex: 1 1 auto; }
   svg {
     width: 80vh;
+    max-width: 100vw;
     height: 80vh;
+    max-height: 80vh;
     margin: 0 auto;
     display: block;
   }
