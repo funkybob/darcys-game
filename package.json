@@ -9,9 +9,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "rollup": "^0.67.3",
-    "rollup-plugin-svelte": "^4.3.2",
-    "rollup-plugin-terser": "^3.0.0",
-    "svelte": "^2.15.3"
+    "rollup": "^1.0.2",
+    "rollup-plugin-svelte": "^5.0.1",
+    "rollup-plugin-terser": "^4.0.1",
+    "svelte": "^2.16.0"
   }
 }
