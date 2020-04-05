@@ -1,220 +1,215 @@
 <main>
   <h1> Score: {score} </h1>
-  <button on:click="startGame()" disabled={running}>Start Game</button>
+  <button on:click={startGame} disabled={running}>Start Game</button>
   <h2> Level: {level+1} </h2>
 </main>
 <p> Instructions: When a moving shape appears, click-and-hold on the matching shape on the border, and join the red line to the moving shape. </p>
-<svg ref:canvas viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
-  on:mousemove="trackMouse(event)"
-  on:touchmove="trackMouse(event)"
-  on:mouseup="mouseup(null)"
-  on:touchend="touchend(event)"
+<svg
+  bind:this={canvas}
+  viewBox="0 0 200 200"
+  xmlns="http://www.w3.org/2000/svg"
+  on:mousemove={trackMouse}
+  on:touchmove={trackMouse}
+  on:mouseup={ev => mouseup(null)}
+  on:touchend={touchend}
 >
   <circle cx="100" cy="100" r="100" fill="lightgreen" />
   <circle cx="100" cy="100" r="80" fill="green" stroke="black" />
   {#each starts as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
-      on:mousedown="mousedown(shape)"
+      on:mousedown={mousedown(shape)}
     />
   {/each}
   {#each shapes as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
-      on:mouseup="mouseup(shape)"
+      on:mouseup={mouseup(shape)}
     />
   {/each}
   {#if down}
-  <line stroke="{down.fill || 'red'}" x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
+  <line stroke={down.fill} x1={down.x + 10} y1={down.y + 10} x2={pointer.x} y2={pointer.y} />
   {/if}
 </svg>
 
 <script>
+	import { onMount } from 'svelte';
+
   import Shape from './Shape.html'
 
-  const colours = [
-    'red',
-    'orange',
-    'yellow',
-    'lightgreen',
-    'blue',
-    'purple',
-    'grey',
-    'blueviolet',
-    'chocolate',
-    'crimson',
-  ]
+  let canvas;
+  let pt;
 
-  export default {
-    components: {
-      Shape,
-    },
-    data () {
-      return {
-        running: false,
-        // ID sequence for shapes
-        counter: 0,
-        score: 0,
-        starts: [],
-        shapes: [],
-        now: 0,
-        // Time the game started
-        start: undefined,
-        lastSpawn: 0,
-        level: 0,
-        // Where the mouse-down started
-        down: null,
-        pointer: {}
-      }
-    },
-    computed: {
-      frame: ({start, now}) => Math.floor((now - start) / 60),
-      level: ({score}) => {
-        let step = 20;
-        let level = 0;
-        score -= step;
-        while(score > 0) { level += 1; score -= step; step *= 1.2; }
-        return level
-      },
-      interval: ({level}) => Math.floor(85 - level * Math.log(level+1)) // Caps us about level 50
-    },
-    oncreate () {
-      this.pt = this.refs.canvas.createSVGPoint()
-      this.on('update', ({ changed, current, previous }) => {
-        if (!previous) {
-          // first update
-        } else {
-          if (current.frame > previous.frame) {
-            if(current.frame - current.lastSpawn > current.interval) {
-              this.addShape()
-            }
-          }
-          if (current.level > previous.level) {
-            this.nextLevel()
-          }
-        }
-      })
-    },
-    methods: {
-      startGame () {
-        this.set({
-          running: true,
-          start: performance.now(),
-          score: 0,
-          lastSpawn: 0,
-          shapes: [],
-          starts: []
-        })
-        this.nextLevel();
-        this.onTimer()
-      },
-      onTimer (now) {
-        this.set({now})
-        this.travelShapes();
-        if (this.get().running)
-          window.requestAnimationFrame(this.onTimer.bind(this))
-      },
-      nextLevel () {
-        let {starts, level, counter} = this.get()
-        let shape = {
-          id: counter,
-          fill: colours[level % colours.length],
-          x: 0,
-          y: 0,
-          n: 3 + level,
-        }
-        starts.push(shape)
-        counter += 1;
-        // Re-distribute around the circle
-        const arc = 360 / starts.length;
-        for(let i=0, l=starts.length; i < l; i++) {
-          let a = arc * i + 90;
-          // centre of circle is 100,100
-          // shape is 20x20, so offset -10,-10
-          // circle has radius of 80, so place these a bit wider
-          starts[i].x = 90 + 90 * Math.cos(a * Math.PI / 180)
-          starts[i].y = 90 + 90 * Math.sin(a * Math.PI / 180)
-        }
-        this.set({starts, counter})
-      },
-      addShape () {
-        let {level, frame, shapes, counter} = this.get()
-        // level is 0-based
-        let n = Math.round(Math.random() * level)
-        let shape = {
-          id: counter,
-          frame: frame,
-          fill: colours[n % colours.length],
-          x: 90,
-          y: 90,
-          n: 3 + n,
-          v: Math.floor(Math.random() * 360)
-        }
-        shapes.push(shape)
-        counter += 1;
-        this.set({shapes, counter, lastSpawn: frame})
-      },
-      travelShapes () {
-        // Move each shape along according to its vector 'v'
-        let {frame, shapes} = this.get()
-        shapes.forEach(shape => {
-          let age = frame - shape.frame
-          if (age == 80) this.endGame()
-          // centre of circle is 100,100
-          // shape is 20x20, so offset -10,-10
-          shape.x = 90 + age * Math.cos(shape.v * Math.PI / 180)
-          shape.y = 90 + age * Math.sin(shape.v * Math.PI / 180)
-        })
-        this.set({shapes})
-      },
-      endGame () {
-        this.set({running: false})
-        alert("GAME OVER!")
-      },
-      screenToSvg(x, y) {
-        this.pt.x = x;
-        this.pt.y = y;
-        let p = this.pt.matrixTransform(this.refs.canvas.getScreenCTM().inverse())
-        return {x: p.x, y: p.y}
-      },
-      trackMouse (ev) {
-        ev.preventDefault();  // prevents touchmove from dragging the window
-        let pointer = this.screenToSvg(
-          (ev.type === 'touchmove') ? ev.changedTouches[0].clientX : ev.clientX,
-          (ev.type === 'touchmove') ? ev.changedTouches[0].clientY : ev.clientY
-        )
-        this.set({pointer})
-      },
-      mousedown (shape) {
-        this.set({down: shape})
-      },
-      touchend (ev) {
-        // scan the shapes to see if we can find one
-        let pointer = this.screenToSvg(
-          ev.changedTouches[0].clientX,
-          ev.changedTouches[0].clientY
-        )
-        let {shapes} = this.get()
-        let match = shapes.find(s => {
-          // shapes center is 10,10 from their origin
-          let dist = Math.sqrt(Math.pow(s.x + 10 - pointer.x, 2) + Math.pow(s.y + 10 - pointer.y, 2))
-          // Shape radius is 10
-          return (dist < 10) ? true : false;
-        })
-        if (match) this.mouseup(match)
-        else this.mouseup(null)
-      },
-      mouseup (shape) {
-        let {score, down, shapes} = this.get()
-        this.set({down: null})
-        if (shape === null) return;
-        if (down.n == shape.n) {
-          score += shape.n
-          shapes = shapes.filter(s => s.id !== shape.id)
-          this.set({score, shapes})
-        }
-      }
+  let running = false;
+  // ID sequence for shapes
+  let counter = 0;
+  let score = 0;
+  let starts = [];
+  let shapes = [];
+  let now = 0;
+  // Time the game started
+  let start = 0;
+  let lastSpawn = 0;
+  let level = 0;
+  // Where the mouse-down started
+  let down = null;
+  let pointer = {};
+
+  $: frame = Math.floor((now - start) / 60);
+  $: {
+    let step = 20;
+    let nlevel = 0;
+    let nscore = score;
+    nscore -= step;
+    while(nscore > 0) {
+      nlevel += 1;
+      nscore -= step;
+      step *= 1.2;
+    }
+    if(nlevel > level) {
+      level = nlevel;
+      nextLevel();
     }
   }
-</script>
+  $: interval = Math.floor(85 - level * Math.log(level+1)) // Caps us about level 50
+  $: {
+    if (running) {
+      if(frame - lastSpawn > interval) {
+        addShape();
+      }
+      travelShapes();
+    }
+  }
+
+  onMount(() => {
+    pt = canvas.createSVGPoint();
+  });
+
+  function startGame () {
+    running = true;
+    start = performance.now();
+    now = start;
+    score = 0;
+    lastSpawn = 0;
+    shapes = [];
+    starts = [];
+
+    nextLevel();
+    onTimer();
+  }
+
+  function onTimer (n) {
+    now = n;
+    if (running) window.requestAnimationFrame(onTimer);
+  }
+
+  function colourForLevel(n) {
+    return `hsl(${360 - (30 * (n % 7))}, ${100 - (20 * (Math.floor((n+1) / 7) + 1))}%, 50%)`;
+  }
+
+  function nextLevel () {
+    let n = 3 + level;
+    let shape = {
+      id: counter,
+      fill: colourForLevel(level),
+      n,
+      x: 0,
+      y: 0,
+    }
+    starts.push(shape)
+    counter += 1;
+    // Re-distribute around the circle
+    const arc = 360 / starts.length;
+    for(let i=0, l=starts.length; i < l; i++) {
+      let a = arc * i + 90;
+      // centre of circle is 100,100
+      // shape is 20x20, so offset -10,-10
+      // circle has radius of 80, so place these a bit wider
+      starts[i].x = 90 + 90 * Math.cos(a * Math.PI / 180)
+      starts[i].y = 90 + 90 * Math.sin(a * Math.PI / 180)
+    }
+    starts = [...starts];
+  };
+
+  function addShape () {
+    // level is 0-based
+    let n = 3 + Math.round(Math.random() * level)
+    let shape = {
+      id: counter,
+      frame: frame,
+      fill: colourForLevel(n-3),
+      n,
+      x: 90,
+      y: 90,
+      v: Math.floor(Math.random() * 360)
+    }
+    lastSpawn = frame;
+    shapes = [...shapes, shape]
+    counter += 1;
+  };
+
+  function travelShapes () {
+    // Move each shape along according to its vector 'v'
+    shapes = shapes.map(shape => {
+      let age = frame - shape.frame
+      if (age == 80) endGame();
+      // centre of circle is 100,100
+      // shape is 20x20, so offset -10,-10
+      shape.x = 90 + age * Math.cos(shape.v * Math.PI / 180)
+      shape.y = 90 + age * Math.sin(shape.v * Math.PI / 180)
+      return shape;
+    })
+  };
+
+  function endGame () {
+    running = false;
+    alert("GAME OVER!")
+  };
+
+  function screenToSvg(x, y) {
+    pt.x = x;
+    pt.y = y;
+    let p = pt.matrixTransform(canvas.getScreenCTM().inverse())
+    return {x: p.x, y: p.y}
+  };
+
+  function trackMouse (ev) {
+    ev.preventDefault();  // prevents touchmove from dragging the window
+    pointer = screenToSvg(
+      (ev.type === 'touchmove') ? ev.changedTouches[0].clientX : ev.clientX,
+      (ev.type === 'touchmove') ? ev.changedTouches[0].clientY : ev.clientY
+    )
+  };
+
+  function mousedown (shape) {
+    down = shape;
+  };
+
+  function touchend (ev) {
+    // scan the shapes to see if we can find one
+    let pointer = screenToSvg(
+      ev.changedTouches[0].clientX,
+      ev.changedTouches[0].clientY
+    )
+    let match = shapes.find(s => {
+      // shapes center is 10,10 from their origin
+      let dist = Math.sqrt(Math.pow(s.x + 10 - pointer.x, 2) + Math.pow(s.y + 10 - pointer.y, 2))
+      // Shape radius is 10
+      return (dist < 10) ? true : false;
+    })
+    if (match) mouseup(match)
+    else mouseup(null)
+  };
+
+  function mouseup (shape) {
+    if (shape !== null) {
+      if (down.n == shape.n) {
+        score += shape.n;
+        shapes = shapes.filter(s => s.id !== shape.id);
+      }
+    }
+    down = null;
+  }
+
+  </script>
 
 <style>
   main { display: flex; }
