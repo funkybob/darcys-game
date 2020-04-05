@@ -1,31 +1,32 @@
+<svelte:options namespace="svg" />
+
 <svg x={x} y={y}>
   <polygon points={points} fill={fill}
     pointer-events="visiblePainted"
-    on:mousedown="fire('mousedown', event)"
-    on:touchstart="fire('mousedown', event)"
-    on:mouseup="fire('mouseup', event)"
-    on:touchend="fire('mouseup', event)"
+    on:mousedown
+    on:touchstart
+    on:mouseup
+    on:touchend
   />
 </svg>
 
 <script>
-  export default {
-    namespace: 'svg',
-    computed: {
-      points: ({n}) => {
-        let points = []
-        let radius = 10
-        const arc = 360 / n;
-        for(let v=0; v < n; v++) {
-          let a = v * arc;
-          let x = radius + radius * Math.cos(a * Math.PI / 180)
-          let y = radius + radius * Math.sin(a * Math.PI / 180)
-          points.push(`${x},${y}`);
-        }
-        return points.join(', ')
-      }
-    }
-  }
+  const radius = 10;
+
+  export let n;
+  export let x;
+  export let y;
+  export let fill;
+
+  $: arc = 360 / n;
+
+  $: points = Array(n).fill(0).map((n, idx) => {
+    let a = idx * arc;
+    let x = radius + radius * Math.cos(a * Math.PI / 180)
+    let y = radius + radius * Math.sin(a * Math.PI / 180)
+    return `${x},${y}`;
+  });
+
 </script>
 
 <style>
