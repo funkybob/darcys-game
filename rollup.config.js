@@ -3,6 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import index from 'rollup-plugin-index';
 import postcss from 'rollup-plugin-postcss';
+import copy from 'rollup-plugin-copy'
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -36,6 +37,11 @@ export default {
 			output: {
 				beautify: false
 			}
+		}),
+		copy({
+			targets: [
+				{ src: 'assets/*', dest: 'dist/' },
+			],
 		}),
 		index({
 			source: 'src/index.html',
