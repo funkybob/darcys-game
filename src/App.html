@@ -17,8 +17,8 @@
   <circle cx="100" cy="100" r="80" fill="green" stroke="black" />
   {#each starts as shape (shape.id)}
     <Shape n={shape.n} x={shape.x} y={shape.y} fill={shape.fill}
-      on:mousedown={mousedown(shape)}
-      on:touchstart={mousedown(shape)}
+      on:mousedown={ev => mousedown(ev, shape)}
+      on:touchstart={ev => mousedown(ev, shape)}
     />
   {/each}
   {#each shapes as shape (shape.id)}
@@ -172,16 +172,18 @@
     return {x: p.x, y: p.y}
   };
 
-  function trackMouse (ev) {
-    ev.preventDefault();  // prevents touchmove from dragging the window
-    pointer = screenToSvg(
-      (ev.type === 'touchmove') ? ev.changedTouches[0].clientX : ev.clientX,
-      (ev.type === 'touchmove') ? ev.changedTouches[0].clientY : ev.clientY
-    )
+  function mousedown (ev, shape) {
+    down = shape;
+    trackMouse(ev);
   };
 
-  function mousedown (shape) {
-    down = shape;
+  function trackMouse (ev) {
+    ev.preventDefault();  // prevents touchmove from dragging the window
+    let isTouch = ev instanceof TouchEvent;
+    pointer = screenToSvg(
+      isTouch ? ev.changedTouches[0].clientX : ev.clientX,
+      isTouch ? ev.changedTouches[0].clientY : ev.clientY
+    )
   };
 
   function touchend (ev) {
