@@ -13,7 +13,8 @@ Over time, shapes will appear in the middle of the green circle, and slowly
 progress towards the edge. If they reach the edge, game over!
 
 To stop them, you must press your mouse button down on the matching shape on
-the edge of the circle, and drag the red line to the shape you want to remove.
+the edge of the circle, and drag the coloured line to the shape you want to
+remove.
 
 Points are awarded based on the number of sides on the shape. As your score
 grows, so does the number of different shapes.
@@ -35,4 +36,3 @@ Then point your browser at http://127.0.0.1:8000/index.html
 
 # Thanks
 - Rich Harris (for Svelte, Rollup, and "pointer-events: none;"
-
