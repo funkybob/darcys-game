@@ -30,12 +30,13 @@ export default {
 		production && terser({
 			module: true,
 			nameCache: {},
-			ecma: 8,
+			ecma: 2018,
 			compress: {
 				passes: 2,
+				drop_console: production,
 			},
 			output: {
-				beautify: false
+				beautify: !production,
 			}
 		}),
 		copy({
