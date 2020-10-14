@@ -5,6 +5,8 @@ import index from 'rollup-plugin-index';
 import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy'
 
+import autoprefixer from 'autoprefixer';
+
 const production = !process.env.ROLLUP_WATCH;
 
 
@@ -12,7 +14,9 @@ export default {
 	input: 'src/main.js',
 	output: {
 		file: 'dist/bundle.js',
-		format: 'esm'
+		format: 'esm',
+		compact: true,
+		interop: false,
 	},
 	plugins: [
 		svelte({
@@ -25,7 +29,10 @@ export default {
 		}),
 		postcss({
 			extract: true,
-			minimize: true,
+			minimize: production,
+			plugins: [
+				autoprefixer(),
+			]
 		}),
 		production && terser({
 			module: true,
