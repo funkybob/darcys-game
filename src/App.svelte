@@ -34,7 +34,7 @@
 <script>
 	import { onMount } from 'svelte';
 
-  import Shape from './Shape.html'
+  import Shape from './Shape.svelte'
 
   let canvas;
   let pt;
@@ -179,7 +179,7 @@
 
   function trackMouse (ev) {
     ev.preventDefault();  // prevents touchmove from dragging the window
-    let isTouch = ev instanceof TouchEvent;
+    let isTouch = ev.type.startsWith('touch');
     pointer = screenToSvg(
       isTouch ? ev.changedTouches[0].clientX : ev.clientX,
       isTouch ? ev.changedTouches[0].clientY : ev.clientY
