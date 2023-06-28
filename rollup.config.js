@@ -20,9 +20,12 @@ export default {
 	},
 	plugins: [
 		svelte({
-			// enable run-time checks when not in production
-			dev: !production,
 			emitCss: true,
+			compilerOptions: {
+				// enable run-time checks when not in production
+				dev: !production,
+				preserveComments: true,
+			}
 		}),
 		resolve({
 			dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
@@ -36,11 +39,11 @@ export default {
 		}),
 		production && terser({
 			module: true,
-			nameCache: {},
 			ecma: 2018,
 			compress: {
 				passes: 2,
 				drop_console: production,
+				pure_getters: true,
 			},
 			output: {
 				beautify: !production,

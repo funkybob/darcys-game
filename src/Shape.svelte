@@ -2,6 +2,7 @@
 
 <svg x={x} y={y}>
   <polygon points={points} fill={fill}
+    role="none"
     pointer-events="visiblePainted"
     on:mousedown
     on:touchstart
@@ -20,7 +21,7 @@
 
   $: arc = 360 / n;
 
-  $: points = Array(n).fill(0).map((n, idx) => {
+  $: points = Array.from({ length: n }, (_, idx) => {
     let a = idx * arc;
     let x = radius + radius * Math.cos(a * Math.PI / 180)
     let y = radius + radius * Math.sin(a * Math.PI / 180)
