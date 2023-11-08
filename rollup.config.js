@@ -1,6 +1,6 @@
 import svelte from 'rollup-plugin-svelte'
 import resolve from '@rollup/plugin-node-resolve';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import index from 'rollup-plugin-index';
 import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy'
